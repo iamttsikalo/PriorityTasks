@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://твій-бекенд.onrender.com/api'; // ЗАМІНИ НА СВІЙ URL З RENDER
+const API_URL = 'https://prioritytasks.onrender.com'; // ЗАМІНИ НА СВІЙ URL З RENDER
 
 function App() {
   const [tasks, setTasks] = useState([]);
@@ -9,7 +9,6 @@ function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [authData, setAuthData] = useState({ username: '', password: '', email: '' });
 
-  // 1. Завантаження завдань (тільки якщо є токен)
   const fetchTasks = async () => {
     if (!token) return;
     try {

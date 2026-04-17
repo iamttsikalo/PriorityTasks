@@ -54,5 +54,13 @@ def add_task():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+# Тимчасовий роут для реєстрації (щоб не було 404)
+@app.route('/api/register', methods=['POST'])
+def register():
+    data = request.json
+    # Тут пізніше буде логіка збереження в базу
+    print(f"Отримано дані для реєстрації: {data}") 
+    return jsonify({"message": "Користувача отримано (тестовий режим)"}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
