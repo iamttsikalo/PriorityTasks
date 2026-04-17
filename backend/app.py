@@ -38,5 +38,9 @@ def add_task():
     db.session.commit()
     return jsonify(new_task.to_dict()), 201
 
+@app.route('/')
+def home():
+    return "Backend is running! Visit /api/tasks to see your data."
+
 if __name__ == '__main__':
     app.run(debug=True)
