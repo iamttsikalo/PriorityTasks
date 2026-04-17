@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Дозволяє фронтенду звертатися до бекенду
-
+CORS(app, resources={r"/*": {"origins": "*"}})
 # Налаштування бази даних
 db_url = os.getenv('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
