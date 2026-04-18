@@ -1,14 +1,15 @@
 import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from models import db, Task
-from dotenv import load_dotenv
 from models import db, Task, User 
+from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
+# Дозволяємо всім джерелам (origins) доступ до нашого API
 CORS(app, resources={r"/*": {"origins": "*"}})
+
 # Налаштування бази даних
 db_url = os.getenv('DATABASE_URL')
 if db_url and db_url.startswith("postgres://"):
@@ -19,21 +20,21 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
-# Створюємо таблиці, якщо їх немає
+# Створюємо таблиці автоматично
 with app.app_context():
     db.create_all()
 
 @app.route('/')
 def home():
-    return "Backend is running! Visit /api/tasks to see your data."
+    return "Backend is running! API is ready."
 
-# Отримати всі завдання
+# --- РОБОТА З ТАСКАМИ ---
+
 @app.route('/api/tasks', methods=['GET'])
 def get_tasks():
     tasks = Task.query.all()
     return jsonify([task.to_dict() for task in tasks])
 
-# Додати нове завдання
 @app.route('/api/tasks', methods=['POST'])
 def add_task():
     data = request.json
@@ -55,8 +56,8 @@ def add_task():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-# Тимчасовий роут для реєстрації (щоб не було 404)
-# Видали той роут, що ми додавали раніше, і встав цей:
+# --- РЕЄСТРАЦІЯ ТА ЛОГІН ---
+
 @app.route('/register', methods=['POST', 'OPTIONS'])
 def register():
     if request.method == 'OPTIONS':
@@ -67,47 +68,41 @@ def register():
     email = data.get('email')
     password = data.get('password')
 
-    # Перевірка, чи не зайнятий логін або імейл
+    if not username or not email or not password:
+        return jsonify({"error": "Всі поля обов'язкові"}), 400
+
     if User.query.filter((User.username == username) | (User.email == email)).first():
-        return jsonify({"error": "Користувач із таким логіном або email вже існує"}), 400
+        return jsonify({"error": "Користувач вже існує"}), 400
 
     try:
-        # Створюємо нового користувача
-        # ПРИМІТКА: Для безпеки пароль треба хешувати (наприклад, через werkzeug.security)
         new_user = User(
             username=username,
             email=email,
-            password_hash=password  # Поки що пишемо просто текст для тесту
+            password_hash=password # У майбутньому додамо хешування
         )
         db.session.add(new_user)
         db.session.commit()
+        print(f"Користувач {username} успішно створений!")
         return jsonify({"message": "Реєстрація успішна!", "user_id": new_user.id}), 201
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-# Роут для логіну
+
 @app.route('/login', methods=['POST', 'OPTIONS'])
 def login():
     if request.method == 'OPTIONS':
         return '', 200
-    data = request.json
-    print(f"Спроба входу: {data}")
-    return jsonify({"message": "Вхід успішний"}), 200
-
-@app.route('/register', methods=['POST'])
-def register():
+    
     data = request.json
     username = data.get('username')
     password = data.get('password')
 
-    if User.query.filter_by(username=username).first():
-        return jsonify({"error": "Такий користувач уже існує"}), 400
-
-    new_user = User(username=username, password=password) # Пароль треба хешувати!
-    db.session.add(new_user)
-    db.session.commit()
+    user = User.query.filter_by(username=username).first()
     
-    return jsonify({"message": "Користувача успішно зареєстровано!"}), 201
+    if user and user.password_hash == password:
+        return jsonify({"message": "Вхід успішний!", "user_id": user.id}), 200
+    
+    return jsonify({"error": "Невірний логін або пароль"}), 401
 
 if __name__ == '__main__':
     app.run(debug=True)
