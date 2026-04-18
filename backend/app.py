@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-# Дозволяємо CORS для зв'язку з фронтендом
-CORS(app, resources={r"/*": {"origins": "*"}})
+# Замість простого CORS(app) напиши так:
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Налаштування підключення до бази (Render Postgres)
 db_url = os.getenv('DATABASE_URL')
