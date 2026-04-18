@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from models import db, Task
 from dotenv import load_dotenv
+from models import db, Task, User 
 
 load_dotenv()
 
@@ -60,11 +61,30 @@ def add_task():
 def register():
     if request.method == 'OPTIONS':
         return '', 200
-    
+        
     data = request.json
-    print(f"Отримано дані для реєстрації: {data}") 
-    return jsonify({"message": "Успішно отримано (тестовий режим)"}), 200
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
 
+    # Перевірка, чи не зайнятий логін або імейл
+    if User.query.filter((User.username == username) | (User.email == email)).first():
+        return jsonify({"error": "Користувач із таким логіном або email вже існує"}), 400
+
+    try:
+        # Створюємо нового користувача
+        # ПРИМІТКА: Для безпеки пароль треба хешувати (наприклад, через werkzeug.security)
+        new_user = User(
+            username=username,
+            email=email,
+            password_hash=password  # Поки що пишемо просто текст для тесту
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify({"message": "Реєстрація успішна!", "user_id": new_user.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 # Роут для логіну
 @app.route('/login', methods=['POST', 'OPTIONS'])
 def login():
@@ -73,5 +93,21 @@ def login():
     data = request.json
     print(f"Спроба входу: {data}")
     return jsonify({"message": "Вхід успішний"}), 200
+
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+
+    if User.query.filter_by(username=username).first():
+        return jsonify({"error": "Такий користувач уже існує"}), 400
+
+    new_user = User(username=username, password=password) # Пароль треба хешувати!
+    db.session.add(new_user)
+    db.session.commit()
+    
+    return jsonify({"message": "Користувача успішно зареєстровано!"}), 201
+
 if __name__ == '__main__':
     app.run(debug=True)
