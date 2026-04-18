@@ -8,7 +8,9 @@ load_dotenv()
 
 app = Flask(__name__)
 # Замість простого CORS(app) напиши так:
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/https://priority-tasks-frontend.onrender.com": {
+    "origins": ["https://priority-tasks-frontend.onrender.com"] # Твоє посилання на фронтенд
+}}, supports_credentials=True)
 
 # Налаштування підключення до бази (Render Postgres)
 db_url = os.getenv('DATABASE_URL')
