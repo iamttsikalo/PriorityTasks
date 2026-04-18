@@ -27,37 +27,46 @@ function App() {
   }, [userId]);
 
   // 2. Логін та Реєстрація (відповідно до твого app.py)
-  const handleAuth = async (e) => {
+const handleAuth = async (e) => {
     e.preventDefault();
+    // Ми чітко вказуємо шлях, як у твоєму Python коді
     const endpoint = isLogin ? '/login' : '/register';
+    const url = `${API_URL}${endpoint}`;
     
+    console.log("Відправляю запит на:", url); // Для перевірки в консолі
+
     try {
-      const response = await fetch(`${API_URL}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(authData)
+        body: JSON.stringify({
+          username: authData.username,
+          password: authData.password,
+          email: authData.email // Бекенд вимагає email для реєстрації!
+        })
       });
+
       const data = await response.json();
 
       if (response.ok) {
         if (isLogin) {
-          // Зберігаємо дані як у твоєму бекенді (user_id та username)
           localStorage.setItem('userId', data.user_id);
           localStorage.setItem('username', data.username);
           setUserId(data.user_id);
           setUsername(data.username);
         } else {
-          alert("Реєстрація успішна! Тепер увійдіть.");
-          setIsLogin(true);
+          alert("Реєстрація успішна! Тепер увійдіть під своїм логіном.");
+          setIsLogin(true); // Автоматично перемикаємо на форму входу
         }
       } else {
-        alert(data.error || "Помилка");
+        // Якщо бекенд повернув помилку (наприклад, юзер уже існує)
+        alert(data.error || "Помилка авторизації");
       }
     } catch (err) {
-      alert("Помилка зв'язку з сервером");
+      console.error("Критична помилка:", err);
+      alert("Не вдалося з'єднатися з сервером. Перевірте інтернет або посилання на бекенд.");
     }
   };
-
   const logout = () => {
     localStorage.clear();
     setUserId(null);
