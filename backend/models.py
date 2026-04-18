@@ -7,8 +7,11 @@ class Task(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255), nullable=False)
-    urgency = db.Column(db.Integer, default = 1)
-    importance = db.Column(db.Integer, default = 1)
+    urgency = db.Column(db.Integer, default=1)
+    importance = db.Column(db.Integer, default=1)
+    
+    # ТУТ ПОМИЛКА: Треба додати колонку для зв'язку з користувачем
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     def to_dict(self):
         return {
@@ -16,7 +19,8 @@ class Task(db.Model):
             'title': self.title,
             'urgency': self.urgency,
             'importance': self.importance,
-            'priority': self.urgency * self.importance
+            'priority': self.urgency * self.importance,
+            'user_id': self.user_id
         }
 
 class User(db.Model):
@@ -25,7 +29,6 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
-    tasks = db.relationship('Task', backref='author', lazy=True)
-
-
     
+    # Цей рядок тепер працюватиме, бо він знайде ForeignKey в моделі Task
+    tasks = db.relationship('Task', backref='author', lazy=True)
