@@ -55,12 +55,14 @@ def add_task():
         return jsonify({"error": str(e)}), 500
 
 # Тимчасовий роут для реєстрації (щоб не було 404)
-@app.route('/api/register', methods=['POST'])
+# Видали той роут, що ми додавали раніше, і встав цей:
+@app.route('/register', methods=['POST', 'OPTIONS'])
 def register():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.json
-    # Тут пізніше буде логіка збереження в базу
     print(f"Отримано дані для реєстрації: {data}") 
-    return jsonify({"message": "Користувача отримано (тестовий режим)"}), 200
-
+    return jsonify({"message": "Успішно отримано (тестовий режим)"}), 200
 if __name__ == '__main__':
     app.run(debug=True)
