@@ -10,7 +10,7 @@ class Task(db.Model):
     urgency = db.Column(db.Integer, default=1)
     importance = db.Column(db.Integer, default=1)
     
-    # ТУТ ПОМИЛКА: Треба додати колонку для зв'язку з користувачем
+    # Ключовий момент: прив'язка завдання до конкретного користувача
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
 
     def to_dict(self):
@@ -30,5 +30,5 @@ class User(db.Model):
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.Text, nullable=False)
     
-    # Цей рядок тепер працюватиме, бо він знайде ForeignKey в моделі Task
+    # Зв'язок: один користувач може мати багато завдань
     tasks = db.relationship('Task', backref='author', lazy=True)
