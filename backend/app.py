@@ -64,5 +64,17 @@ def register():
     data = request.json
     print(f"Отримано дані для реєстрації: {data}") 
     return jsonify({"message": "Успішно отримано (тестовий режим)"}), 200
+
+# Роут для логіну
+@app.route('/login', methods=['POST', 'OPTIONS'])
+def login():
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    data = request.json
+    # Тимчасова перевірка (для тесту)
+    print(f"Спроба входу: {data}")
+    return jsonify({"message": "Вхід успішний (тестовий режим)"}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
