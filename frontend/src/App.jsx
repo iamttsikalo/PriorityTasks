@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
-const API_URL = 'https://prioritytasks.onrender.com'; // ЗАМІНИ НА СВІЙ URL З RENDER
+const API_URL = 'https://prioritytasks.onrender.com';
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
-  const [isLogin, setIsLogin] = useState(true); // Перемикач Логін/Реєстрація
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [isLogin, setIsLogin] = useState(true);
+  const [userId, setUserId] = useState(localStorage.getItem('userId'));
+  const [username, setUsername] = useState(localStorage.getItem('username'));
   const [authData, setAuthData] = useState({ username: '', password: '', email: '' });
 
+  // 1. Отримання завдань (тепер через /api/tasks/ID)
   const fetchTasks = async () => {
-    if (!token) return;
+    if (!userId) return;
     try {
-      const response = await fetch(`${API_URL}/tasks`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (response.status === 401) logout(); // Якщо токен протух
+      const response = await fetch(`${API_URL}/api/tasks/${userId}`);
       const data = await response.json();
       setTasks(data);
     } catch (err) {
@@ -25,12 +24,13 @@ function App() {
 
   useEffect(() => {
     fetchTasks();
-  }, [token]);
+  }, [userId]);
 
-  // 2. Логін та Реєстрація
+  // 2. Логін та Реєстрація (відповідно до твого app.py)
   const handleAuth = async (e) => {
     e.preventDefault();
     const endpoint = isLogin ? '/login' : '/register';
+    
     try {
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
@@ -39,12 +39,19 @@ function App() {
       });
       const data = await response.json();
 
-      if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
-        setToken(data.access_token);
-      } else if (data.message || data.error) {
-        alert(data.message || data.error);
-        if (!isLogin && !data.error) setIsLogin(true); // Перекидаємо на логін після реєстрації
+      if (response.ok) {
+        if (isLogin) {
+          // Зберігаємо дані як у твоєму бекенді (user_id та username)
+          localStorage.setItem('userId', data.user_id);
+          localStorage.setItem('username', data.username);
+          setUserId(data.user_id);
+          setUsername(data.username);
+        } else {
+          alert("Реєстрація успішна! Тепер увійдіть.");
+          setIsLogin(true);
+        }
+      } else {
+        alert(data.error || "Помилка");
       }
     } catch (err) {
       alert("Помилка зв'язку з сервером");
@@ -52,21 +59,22 @@ function App() {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
+    localStorage.clear();
+    setUserId(null);
+    setUsername(null);
     setTasks([]);
   };
 
-  // 3. Додавання завдання
+  // 3. Додавання завдання (передаємо user_id у тілі запиту)
   const addTask = async (e) => {
     e.preventDefault();
-    const response = await fetch(`${API_URL}/tasks`, {
+    const response = await fetch(`${API_URL}/api/tasks`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ title })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        title: title,
+        user_id: userId // Важливо для твого бекенду
+      })
     });
     if (response.ok) {
       setTitle('');
@@ -74,15 +82,13 @@ function App() {
     }
   };
 
-  // --- ІНТЕРФЕЙС ---
-
-  if (!token) {
+  if (!userId) {
     return (
-      <div className="auth-container">
+      <div className="auth-container" style={{padding: '20px', textAlign: 'center'}}>
         <h2>{isLogin ? 'Вхід' : 'Реєстрація'}</h2>
-        <form onSubmit={handleAuth}>
+        <form onSubmit={handleAuth} style={{display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px', margin: '0 auto'}}>
           <input 
-            placeholder="Username" 
+            placeholder="Логін" 
             onChange={e => setAuthData({...authData, username: e.target.value})} 
             required 
           />
@@ -95,13 +101,13 @@ function App() {
           )}
           <input 
             type="password" 
-            placeholder="Password" 
+            placeholder="Пароль" 
             onChange={e => setAuthData({...authData, password: e.target.value})} 
             required 
           />
           <button type="submit">{isLogin ? 'Увійти' : 'Створити аккаунт'}</button>
         </form>
-        <p onClick={() => setIsLogin(!isLogin)} style={{cursor: 'pointer', color: 'blue'}}>
+        <p onClick={() => setIsLogin(!isLogin)} style={{cursor: 'pointer', color: 'blue', marginTop: '10px'}}>
           {isLogin ? 'Немає аккаунту? Зареєструйся' : 'Вже є аккаунт? Увійди'}
         </p>
       </div>
@@ -109,13 +115,13 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <header>
-        <h1>Мої пріоритетні завдання</h1>
+    <div className="app-container" style={{padding: '20px'}}>
+      <header style={{display: 'flex', justifyContent: 'space-between'}}>
+        <h1>Привіт, {username}!</h1>
         <button onClick={logout}>Вийти</button>
       </header>
 
-      <form onSubmit={addTask}>
+      <form onSubmit={addTask} style={{margin: '20px 0'}}>
         <input 
           value={title} 
           onChange={e => setTitle(e.target.value)} 
@@ -127,7 +133,9 @@ function App() {
 
       <ul>
         {tasks.map(task => (
-          <li key={task.id}>{task.title}</li>
+          <li key={task.id} style={{padding: '10px', background: '#eee', margin: '5px 0', borderRadius: '5px', listStyle: 'none'}}>
+            {task.title}
+          </li>
         ))}
       </ul>
     </div>
