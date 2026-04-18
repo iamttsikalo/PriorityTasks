@@ -1,47 +1,13 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
-    <meta charset="UTF-8">
-    <title>Вхід - Priority Tasks</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f4; }
-        .login-card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input { display: block; width: 100%; margin-bottom: 1rem; padding: 0.5rem; }
-        button { width: 100%; padding: 0.5rem; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <div class="login-card">
-        <h2>Вхід</h2>
-        <input type="text" id="username" placeholder="Логін">
-        <input type="password" id="password" placeholder="Пароль">
-        <button onclick="login()">Увійти</button>
-        <p>Немає аккаунту? <a href="register.html">Зареєструватися</a></p>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Priority Tasks</title>
+  </head>
+  <body>
+    <div id="root"></div>
 
-    <script>
-        const API_URL = "https://prioritytasks.onrender.com"; // ЗАМІНИ НА СВІЙ URL
-
-        async function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            const response = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('userId', data.user_id);
-                localStorage.setItem('username', data.username);
-                window.location.href = 'tasks.html'; // Перехід до програми
-            } else {
-                alert(data.error || "Помилка входу");
-            }
-        }
-    </script>
-</body>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
