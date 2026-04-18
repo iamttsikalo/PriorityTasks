@@ -70,11 +70,8 @@ def register():
 def login():
     if request.method == 'OPTIONS':
         return '', 200
-    
     data = request.json
-    # Тимчасова перевірка (для тесту)
     print(f"Спроба входу: {data}")
-    return jsonify({"message": "Вхід успішний (тестовий режим)"}), 200
-
+    return jsonify({"message": "Вхід успішний"}), 200
 if __name__ == '__main__':
     app.run(debug=True)
