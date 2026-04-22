@@ -110,5 +110,19 @@ def login():
     
     return jsonify({"error": "Невірний логін або пароль"}), 401
 
+@app.route('/api/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    task = Task.query.get(task_id)
+    if not task:
+        return jsonify({"error:": "Завдання не знайдено"}), 404
+    
+    try:
+        db.session.delete(task)
+        db.session.commit()
+        return jsonify({"message": "Завдання успішно видалено"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True)
